@@ -1,6 +1,9 @@
 from django.contrib import admin
 
+from store.models import Book
 
+
+@admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'price')
-    search_fields = ('title', 'author')
+    list_display = ('name', 'price', 'id')
+    # search_fields = ('title', 'name')
