@@ -1,3 +1,6 @@
+import json
+
+from django.contrib.auth.models import User
 from django.db.migrations import serializer
 from django.urls import reverse
 from rest_framework import status
@@ -9,6 +12,7 @@ from store.serializers import BookSerializer
 
 class BooksApiTestCase(APITestCase):
     def setUp(self):
+        self.user = User.objects.create_user(username='admin', password='9900')
         self.book_1 = Book.objects.create(name='Test book 1', price=10, author='Author 1')
         self.book_2 = Book.objects.create(name='Test book 2', price=20, author='Author 2')
         self.book_3 = Book.objects.create(name='Test book Author 1', price=30, author='Author 3')
@@ -49,3 +53,42 @@ class BooksApiTestCase(APITestCase):
         authors = [item['author'] for item in response.data]
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(authors, ['Author 1', 'Author 2', 'Author 3'])
+
+    def test_create(self):
+        self.assertEqual(Book.objects.all().count(), 3)
+        url = reverse('book-list')
+        data = {
+            'name': 'The Test Book 1',
+            'price': '20.00',
+            'author': 'Author test'
+        }
+        json_data = json.dumps(data)
+        self.client.force_login(self.user)
+        response = self.client.post(url, data=json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Book.objects.all().count(), 4)
+
+    def test_update(self):
+        url = reverse('book-detail', args=(self.book_1.id,))
+        data = {
+            'name': self.book_1.name,
+            'price': '575',
+            'author': self.book_1.author
+        }
+        json_data = json.dumps(data)
+        self.client.force_login(self.user)
+        response = self.client.put(url, data=json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.book_1.refresh_from_db()
+        self.assertEqual(575, self.book_1.price)
+
+    def test_delete(self):
+        url = reverse('book-detail', args=(self.book_1.id,))
+        self.client.force_login(self.user)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        # объект реально удалён
+        self.assertFalse(Book.objects.filter(id=self.book_1.id).exists())
+        # повторный GET запрос на 404
+        response_get = self.client.get(url)
+        self.assertEqual(response_get.status_code, status.HTTP_404_NOT_FOUND)
