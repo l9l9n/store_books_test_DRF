@@ -6,10 +6,14 @@ coverage==7.13.1
 cryptography==46.0.3
 defusedxml==0.7.1
 Django==6.0.1
+django-debug-toolbar==6.1.0
+django-debug-toolbar-force==0.2
 django-filter==25.2
+django-nine==0.2.7
 djangorestframework==3.16.1
 idna==3.11
 oauthlib==3.3.1
+packaging==25.0
 psycopg2-binary==2.9.11
 pycparser==2.23
 PyJWT==2.10.1
